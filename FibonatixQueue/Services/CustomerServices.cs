@@ -18,23 +18,6 @@ namespace FibonatixQueue.Services
 {
     public enum ServiceStructure { Azure, Redis, MongoDB }
 
-    public abstract class ServiceBase
-    {
-        private IServiceSettings settings { get; set; }
-
-        public ServiceBase(IServiceSettings settings)
-        {
-            this.settings = settings;
-        }
-
-        public PeekedMessage PopItem() { return client.PeekMessage().Value; }
-
-        public void PushItem(string message)
-        {
-            client.SendMessage(message);
-        }
-    }
-
     public class AzureQueueService
     {
         private QueueClient client { get; set; }
