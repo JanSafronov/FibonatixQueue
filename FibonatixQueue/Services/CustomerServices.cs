@@ -41,7 +41,7 @@ namespace FibonatixQueue.Services
 
         public RedisQueueService(RedisDBSettings settings)
         {
-            IConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
+            IConnectionMultiplexer redis = ConnectionMultiplexer.Connect("redis-10109.c291.ap-southeast-2-1.ec2.cloud.redislabs.com:10109");
             queryable = redis.GetDatabase();
         }
 
