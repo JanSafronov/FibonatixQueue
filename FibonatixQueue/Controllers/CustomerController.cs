@@ -24,15 +24,8 @@ namespace FibonatixQueue.Controllers
             _customerService = customerService;
         }
 
-        // GET: api/<CustomerController>
-        /*[HttpGet(Name = "GetCustomers")]
-        public IEnumerable<RedisValue> Get()
-        {
-            return _customerService;
-        }*/
-
         // GET api/<CustomerController>/5
-        [HttpGet("{queueName:length(24)}", Name = "PopCustomer"]
+        [HttpGet("{queueName:length(24)}", Name = "PopCustomer")]
         public RedisValue Pop(string queueName)
         {
             return _customerService.PopItem(queueName);
@@ -42,9 +35,7 @@ namespace FibonatixQueue.Controllers
         [HttpPost]
         public void Post([FromBody] Customer customer)
         {
-            
-            
-            _customerService.PushItem(StackExchange.Redis., customer);
+            _customerService.PushItem(customer.Name, new RedisValue[] { new RedisValue(customer.ToList().ToString()) });
         }
 
         // PUT api/<CustomerController>/5

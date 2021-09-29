@@ -36,11 +36,6 @@ namespace FibonatixQueue.Models
             this.Date = Date;
             this.Profession = Profession;
         }
-
-        public void Listify()
-        {
-            new List<object>(new Dictionary({ "Name": Name });
-        }
     }
 
     public class Customer : PartialCustomer
@@ -49,5 +44,10 @@ namespace FibonatixQueue.Models
 
         public Customer(string Name, DateTime Date, int Age, string Profession) :
             base(Name, Date, Profession) { this.Age = Age; }
+
+        public List<object> ToList()
+        {
+            return new List<object>(new object[] { Name, Date, Age, Profession });
+        }
     }
 }

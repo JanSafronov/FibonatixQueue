@@ -1,15 +1,26 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Builder.Extensions;
+using Microsoft.AspNetCore.Hosting.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Abstractions;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Azure;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Azure.Storage.Queues;
@@ -39,6 +50,13 @@ namespace FibonatixQueue
                 builder.AddBlobServiceClient(Configuration["ConnectionStrings:LocalDBTesting:blob"], preferMsi: true);
                 builder.AddQueueServiceClient(Configuration["ConnectionStrings:LocalDBTesting:queue"], preferMsi: true);
             });
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "FibonatixQueue", Version = "v1" });
+            });
+
+            services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,12 +65,15 @@ namespace FibonatixQueue
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FibonatixQueue v1"));
             }
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
