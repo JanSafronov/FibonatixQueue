@@ -35,7 +35,9 @@ namespace FibonatixQueue.Controllers
         [HttpPost]
         public void Post([FromBody] Customer customer)
         {
-            _customerService.PushItem(customer.Name, new RedisValue[] { new RedisValue(customer.ToList().ToString()) });
+            //_customerService.PushItem(customer.Name, new RedisValue[] { new RedisValue(customer.ToList().ToString()) });
+            RedisValue[] something = new RedisValue[] { "Testing" };
+            _customerService.PushItem(customer.Name, something );
         }
 
         // PUT api/<CustomerController>/5

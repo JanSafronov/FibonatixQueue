@@ -41,7 +41,7 @@ namespace FibonatixQueue.Services
 
         public RedisQueueService(RedisDBSettings settings)
         {
-            IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(settings.connectionString + "," + settings.storage);
+            IConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
             queryable = redis.GetDatabase();
         }
 
