@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "secrets1": {
+      "type": "secrets.user"
+    },
+    "mssql1": {
+      "type": "mssql.local",
+      "connectionId": "Queues",
+      "secretStore": "LocalSecretsFile"
+    },
+    "storage1": {
+      "type": "storage.emulator",
+      "connectionId": "LocalDBTesting:queue",
+      "secretStore": "LocalSecretsFile"
+    },
+    "mssql2": {
+      "type": "mssql.local",
+      "connectionId": "FibonatixQueueContext"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "secrets1": {
+      "type": "secrets"
+    },
+    "mssql1": {
+      "type": "mssql",
+      "connectionId": "Queues"
+    },
+    "storage1": {
+      "type": "storage",
+      "connectionId": "LocalDBTesting:queue"
+    },
+    "mssql2": {
+      "type": "mssql",
+      "connectionId": "FibonatixQueueContext"
+    }
+  }
+}
