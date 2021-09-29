@@ -9,7 +9,7 @@ using Azure.Storage.Queues.Models;
 using Azure.Storage.Queues.Specialized;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.Core;
+using MongoDB.Driver.Linq;
 using StackExchange.Redis;
 using StackExchange.Redis.Profiling;
 using FibonatixQueue.Settings;
@@ -26,6 +26,13 @@ namespace FibonatixQueue.Services
         {
             this.settings = settings;
         }
+
+        public PeekedMessage PopItem() { return client.PeekMessage().Value; }
+
+        public void PushItem(string message)
+        {
+            client.SendMessage(message);
+        }
     }
 
     public class AzureQueueService
@@ -34,19 +41,14 @@ namespace FibonatixQueue.Services
 
         public AzureQueueService(AzureDBSettings settings)
         {
-            this.client = new(settings.connectionString, settings.storage);
+            client = new(settings.connectionString, settings.storage);
         }
 
-        public PeekedMessage GetItem() { return client.PeekMessage().Value; }
+        public PeekedMessage PopItem() { return client.PeekMessage().Value; }
 
-        public void CreateItem(string message)
+        public void PushItem(string message)
         {
             client.SendMessage(message);
-        }
-
-        public void DeleteItem(string messageId)
-        {
-            client.DeleteMessage(messageId, "");
         }
     }
 
@@ -57,32 +59,39 @@ namespace FibonatixQueue.Services
         public RedisQueueService(RedisDBSettings settings)
         {
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(settings.connectionString + "," + settings.storage);
-            this.queryable = redis.GetDatabase();
+            queryable = redis.GetDatabase();
         }
 
-        public RedisValue PopItem(string queueName) { return queryable.ListLeftPop(queueName); }
+        public RedisValue PopItem(string queueName) { return queryable.ListRightPop(queueName); }
 
         public void PushItem(RedisKey key, RedisValue[] values)
         {
-            queryable.ListRightPush(key, values);
-        }
-
-        public void ReplaceItem(string messageId)
-        {
-            queryable.list
+            queryable.ListLeftPush(key, values);
         }
     }
 
-    public class MongoQueueService
+    public class MongoQueueService<I> where I : BsonDocument
     {
-        private IMongoCollection<BsonDocument> queryable { get; set; }
+        private IMongoCollection<I> queryable { get; set; }
 
         public MongoQueueService(MongoDBSettings settings)
         {
             MongoClient client = new(settings.connectionString);
             IMongoDatabase database = client.GetDatabase(settings.storage);
 
-            this.queryable = database.GetCollection<BsonDocument>(settings.collection);
+            queryable = database.GetCollection<I>(settings.collection);
+        }
+
+        public BsonDocument PopItem() {
+            FilterDefinitionBuilder<BsonDocument> builder = new FilterDefinitionBuilder<BsonDocument>();
+            BsonObjectId _id = queryable.AsQueryable().FirstOrDefault()[0] as BsonObjectId;
+
+            return queryable.FindOneAndDelete(item => item[0] == _id);
+        }
+
+        public void PushItem(I item)
+        {
+            queryable.InsertOne(item);
         }
     }
 }
