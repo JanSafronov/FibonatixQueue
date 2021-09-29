@@ -25,15 +25,20 @@ namespace FibonatixQueue.Controllers
         }
 
         // GET api/<CustomerController>/5
-        [HttpGet("{queueName:length(24)}", Name = "PopCustomer")]
-        public RedisValue Pop(string queueName)
+        [HttpGet(Name = "PopCustomer")]
+        public ActionResult<RedisValue> Pop(string queueName)
         {
-            return _customerService.PopItem(queueName);
+            RedisValue customerVal = _customerService.PopItem(queueName);
+
+            if (customerVal.IsNull) 
+                return NotFound();
+
+            return customerVal;
         }
 
         // POST api/<CustomerController>
         [HttpPost]
-        public void Post([FromBody] Customer customer)
+        public void Post(Customer customer) //[FromBody] 
         {
             //_customerService.PushItem(customer.Name, new RedisValue[] { new RedisValue(customer.ToList().ToString()) });
             RedisValue[] something = new RedisValue[] { "Testing" };

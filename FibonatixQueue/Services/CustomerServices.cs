@@ -45,7 +45,7 @@ namespace FibonatixQueue.Services
             queryable = redis.GetDatabase();
         }
 
-        public RedisValue PopItem(string queueName) { return queryable.ListRightPop(queueName); }
+        public RedisValue PopItem(string queueName) { return queryable.ListRightPop(new RedisKey(queueName)); }
 
         public void PushItem(RedisKey key, RedisValue[] values)
         {
