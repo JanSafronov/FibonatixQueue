@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -43,15 +40,17 @@ namespace FibonatixQueue.Controllers
         }
 
         [HttpPost]
-        public ActionResult<string[]> Post(Customer customer) //[FromBody] 
+        public ActionResult<string[]> Post(Customer customer)
         {
-            var redises = new RedisValue[] { 
-                new RedisValue(JsonConvert.SerializeObject(customer))
+            string json = customer.Jsonify();
+
+            var redises = new RedisValue[] {
+                new RedisValue(json)
             };
 
             _customerService.PushItem(new RedisKey(customer.Name), redises);
 
-            return (string[])RedisResult.Create(new RedisValue[] { new RedisValue(JsonConvert.SerializeObject(customer)) });
+            return (string[])RedisResult.Create(new RedisValue[] { new RedisValue(json) });
         }
 
         // PUT api/<CustomerController>/5

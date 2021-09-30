@@ -53,17 +53,17 @@ namespace FibonatixQueue.Services
         }
 
         public RedisResult PopItem(RedisKey key) { 
-            //try {
+            try {
                 return RedisResult.Create(queryable.ListRightPop(key));
-            //}
-            //catch {
-            //    return new RedisValue();
-            //}
+            }
+            catch {
+                return RedisResult.Create(new RedisValue());
+            }
         }
 
         public void PushItem(RedisKey key, RedisValue[] values)
         {
-            // Remove the "Age" field from the 
+            // Remove the "Age" field from the json string
             queryable.ListLeftPush(key, values);
         }
     }

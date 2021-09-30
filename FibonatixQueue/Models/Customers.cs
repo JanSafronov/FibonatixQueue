@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+//using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Linq;
@@ -40,6 +40,7 @@ namespace FibonatixQueue.Models
 
     public class Customer : PartialCustomer
     {
+        [JsonIgnore]
         public int Age { get; set; }
 
         [JsonConstructor]
@@ -48,6 +49,22 @@ namespace FibonatixQueue.Models
         
         public Customer() :
         base("string", DateTime.Now, "string") {}
+
+        public string Jsonify(bool include = false)
+        {
+            
+            string json = JsonConvert.SerializeObject(this);
+
+            if (include)
+            {
+                var temp = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
+                temp.Add("Age", Age);
+
+                JsonConvert.SerializeObject(temp);
+            }
+
+            return json;
+        }
 
         public List<object> ToList()
         {
