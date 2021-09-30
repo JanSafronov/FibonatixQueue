@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Azure;
+using System.Net;
+using System.Net.Sockets;
 using Azure.Storage;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
@@ -12,6 +13,7 @@ using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using StackExchange.Redis;
 using StackExchange.Redis.Profiling;
+using StackExchange.Redis.KeyspaceIsolation;
 using FibonatixQueue.Settings;
 
 namespace FibonatixQueue.Services
@@ -37,18 +39,31 @@ namespace FibonatixQueue.Services
 
     public class RedisQueueService
     {
-        private IDatabase queryable { get; set; }
+        public IDatabase queryable { get; set; }
 
-        public RedisQueueService(RedisDBSettings settings)
+        public RedisQueueService()
         {
-            IConnectionMultiplexer redis = ConnectionMultiplexer.Connect("redis-10109.c291.ap-southeast-2-1.ec2.cloud.redislabs.com:10109");
+            ConfigurationOptions options = new ConfigurationOptions();
+            options.EndPoints.Add("secret");
+            options.Password = "secret";
+
+            IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
             queryable = redis.GetDatabase();
+            
         }
 
-        public RedisValue PopItem(string queueName) { return queryable.ListRightPop(new RedisKey(queueName)); }
+        public RedisResult PopItem(RedisKey key) { 
+            //try {
+                return RedisResult.Create(queryable.ListRightPop(key));
+            //}
+            //catch {
+            //    return new RedisValue();
+            //}
+        }
 
         public void PushItem(RedisKey key, RedisValue[] values)
         {
+            // Remove the "Age" field from the 
             queryable.ListLeftPush(key, values);
         }
     }

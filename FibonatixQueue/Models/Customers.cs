@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using StackExchange.Redis;
-using StackExchange.Redis.KeyspaceIsolation;
-using StackExchange.Redis.Profiling;
 
 namespace FibonatixQueue.Models
 {
@@ -42,12 +42,16 @@ namespace FibonatixQueue.Models
     {
         public int Age { get; set; }
 
+        [JsonConstructor]
         public Customer(string Name, DateTime Date, int Age, string Profession) :
-            base(Name, Date, Profession) { this.Age = Age; }
+        base(Name, Date, Profession) { this.Age = Age; }
+        
+        public Customer() :
+        base("string", DateTime.Now, "string") {}
 
         public List<object> ToList()
         {
-            return new List<object>(new object[] { Name, Date, Age, Profession });
+            return new List<object>(new object[] { this.Name, this.Date, this.Age, this.Profession });
         }
     }
 }

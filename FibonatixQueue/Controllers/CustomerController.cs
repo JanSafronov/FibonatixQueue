@@ -2,17 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
+using StackExchange.Redis.KeyspaceIsolation;
+using StackExchange.Redis.Profiling;
 using FibonatixQueue.Models;
 using FibonatixQueue.Services;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace FibonatixQueue.Controllers
 {
-
-
     [Route("api/[controller]", Name = "Customer")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -24,29 +31,31 @@ namespace FibonatixQueue.Controllers
             _customerService = customerService;
         }
 
-        // GET api/<CustomerController>/5
         [HttpGet(Name = "PopCustomer")]
-        public ActionResult<RedisValue> Pop(string queueName)
+        public ActionResult<string[]> Pop(string key)
         {
-            RedisValue customerVal = _customerService.PopItem(queueName);
+            string[] customerVal = ((string[])_customerService.PopItem(new RedisKey(key)));
 
-            if (customerVal.IsNull) 
+            if (customerVal == null) 
                 return NotFound();
 
             return customerVal;
         }
 
-        // POST api/<CustomerController>
         [HttpPost]
-        public void Post(Customer customer) //[FromBody] 
+        public ActionResult<string[]> Post(Customer customer) //[FromBody] 
         {
-            //_customerService.PushItem(customer.Name, new RedisValue[] { new RedisValue(customer.ToList().ToString()) });
-            RedisValue[] something = new RedisValue[] { "Testing" };
-            _customerService.PushItem(customer.Name, something );
+            var redises = new RedisValue[] { 
+                new RedisValue(JsonConvert.SerializeObject(customer))
+            };
+
+            _customerService.PushItem(new RedisKey(customer.Name), redises);
+
+            return (string[])RedisResult.Create(new RedisValue[] { new RedisValue(JsonConvert.SerializeObject(customer)) });
         }
 
         // PUT api/<CustomerController>/5
-        [HttpPut("{id}")]
+        /*[HttpPut("{id}")]
         public void Put(int id, [FromBody] string value)
         {
         }
@@ -55,6 +64,6 @@ namespace FibonatixQueue.Controllers
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
-        }
+        }*/
     }
 }

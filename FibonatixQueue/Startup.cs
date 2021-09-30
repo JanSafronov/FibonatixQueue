@@ -27,6 +27,7 @@ using Azure.Storage.Queues;
 using Azure.Storage.Blobs;
 using Azure.Core.Extensions;
 using StackExchange.Redis;
+using FibonatixQueue.Services;
 [assembly: FunctionsStartup(typeof(FibonatixQueue.Startup))]
 
 namespace FibonatixQueue
@@ -51,12 +52,17 @@ namespace FibonatixQueue
                 builder.AddQueueServiceClient(Configuration["ConnectionStrings:LocalDBTesting:queue"], preferMsi: true);
             });
 
+            services.AddSingleton<RedisQueueService>();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "FibonatixQueue", Version = "v1" });
             });
 
-            services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
+            //var multiplexer = ConnectionMultiplexer.Connect("localhost");
+            //services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+
+            //services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,6 +74,9 @@ namespace FibonatixQueue
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FibonatixQueue v1"));
             }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FibonatixQueue v1"));
 
             app.UseHttpsRedirection();
 

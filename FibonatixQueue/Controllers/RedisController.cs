@@ -9,7 +9,7 @@ using StackExchange.Redis;
 
 namespace FibonatixQueue.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]", Name = "Redis")]
     [ApiController]
     public class RedisController : ControllerBase
     {
