@@ -42,8 +42,10 @@ namespace FibonatixQueue
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.Configure<RedisDBSettings>(Configuration.GetSection("RedisDBSettings"));
-            services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<RedisDBSettings>>().Value));
+            services.Configure<RedisDBSettings>(Configuration.GetSection(nameof(RedisDBSettings)));
+            services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<RedisDBSettings>>().Value);
+
+            services.AddSingleton<RedisQueueService>();
 
             services.AddControllers();
             services.AddAzureClients(builder =>
@@ -51,8 +53,6 @@ namespace FibonatixQueue
                 builder.AddBlobServiceClient(Configuration["ConnectionStrings:LocalDBTesting:blob"], preferMsi: true);
                 builder.AddQueueServiceClient(Configuration["ConnectionStrings:LocalDBTesting:queue"], preferMsi: true);
             });
-
-            services.AddSingleton<RedisQueueService>();
 
             services.AddSwaggerGen(c =>
             {

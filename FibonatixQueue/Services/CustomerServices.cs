@@ -26,7 +26,7 @@ namespace FibonatixQueue.Services
 
         public AzureQueueService(AzureDBSettings settings)
         {
-            client = new(settings.connectionString, settings.storage);
+            client = new(settings.connectionString, settings.password);
         }
 
         public PeekedMessage PopItem() { return client.PeekMessage().Value; }
@@ -41,7 +41,7 @@ namespace FibonatixQueue.Services
     {
         public IDatabase queryable { get; set; }
 
-        public RedisQueueService(RedisDBSettings settings)
+        public RedisQueueService(IServiceSettings settings)
         {
             ConfigurationOptions options = new ConfigurationOptions();
             options.EndPoints.Add(settings.connectionString);
@@ -75,7 +75,7 @@ namespace FibonatixQueue.Services
         public MongoQueueService(MongoDBSettings settings)
         {
             MongoClient client = new(settings.connectionString);
-            IMongoDatabase database = client.GetDatabase(settings.storage);
+            IMongoDatabase database = client.GetDatabase(settings.database);
 
             queryable = database.GetCollection<I>(settings.collection);
         }

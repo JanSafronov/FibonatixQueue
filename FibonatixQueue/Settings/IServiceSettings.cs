@@ -14,11 +14,6 @@ namespace FibonatixQueue.Settings
         string password { get; set; }
     }
 
-    public interface ISubServiceSettings : IServiceSettings
-    {
-        string collection { get; set; }
-    }
-
     public class RedisDBSettings : IServiceSettings
     {
         public string connectionString { get; set; }
@@ -33,11 +28,13 @@ namespace FibonatixQueue.Settings
         public string password { get; set; }
     }
 
-    public class MongoDBSettings : ISubServiceSettings
+    public class MongoDBSettings : IServiceSettings
     {
         public string connectionString { get; set; }
 
         public string password { get; set; }
+
+        public string database { get; set; }
 
         public string collection { get; set; }
     }
