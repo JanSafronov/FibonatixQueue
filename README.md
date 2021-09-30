@@ -17,3 +17,7 @@ The API uses external libraries and environments such as:
 |  Core 3.1  |   8.0    |
 
 The project is kept up to date with the latest versioning of the frameworks and libraries used.
+
+I recommend to use httprepl utility for testing and using the api directly in the terminal.
+
+Also the terminal can be used for connection string and password and redirection to Swagger.

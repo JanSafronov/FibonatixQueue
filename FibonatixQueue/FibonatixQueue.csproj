@@ -56,5 +56,7 @@
     <OpenApiReference Include="appsettings.json" ClassName="OpenAPIStartup" CodeGenerator="NSwagCSharp" Namespace="FibonatixQueue.OpenAPI" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
+
 
 </Project>

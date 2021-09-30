@@ -25,6 +25,10 @@ using Azure.Core.Extensions;
 using StackExchange.Redis;
 using FibonatixQueue.Services;
 using FibonatixQueue.Settings;
+using Newtonsoft;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Converters;
 [assembly: FunctionsStartup(typeof(FibonatixQueue.Startup))]
 
 namespace FibonatixQueue
@@ -41,8 +45,12 @@ namespace FibonatixQueue
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            Console.WriteLine("Enter the connection string to the Redis database:");
+            string connectionString = Console.ReadLine();
+            Console.WriteLine("Enter the password for the database:");
+            string password = Console.ReadLine();
 
-            services.Configure<RedisDBSettings>(Configuration.GetSection(nameof(RedisDBSettings)));
+            services.Configure<RedisDBSettings>(db => { db.connectionString = connectionString; db.password = password; });
             services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<RedisDBSettings>>().Value);
 
             services.AddSingleton<RedisQueueService>();
