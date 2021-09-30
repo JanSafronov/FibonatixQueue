@@ -8,10 +8,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Builder.Extensions;
-using Microsoft.AspNetCore.Hosting.Builder;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Abstractions;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
@@ -28,6 +24,7 @@ using Azure.Storage.Blobs;
 using Azure.Core.Extensions;
 using StackExchange.Redis;
 using FibonatixQueue.Services;
+using FibonatixQueue.Settings;
 [assembly: FunctionsStartup(typeof(FibonatixQueue.Startup))]
 
 namespace FibonatixQueue
@@ -44,6 +41,9 @@ namespace FibonatixQueue
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.Configure<RedisDBSettings>(Configuration.GetSection("RedisDBSettings"));
+            services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<RedisDBSettings>>().Value));
 
             services.AddControllers();
             services.AddAzureClients(builder =>

@@ -41,11 +41,11 @@ namespace FibonatixQueue.Services
     {
         public IDatabase queryable { get; set; }
 
-        public RedisQueueService()
+        public RedisQueueService(RedisDBSettings settings)
         {
             ConfigurationOptions options = new ConfigurationOptions();
-            options.EndPoints.Add("secret");
-            options.Password = "secret";
+            options.EndPoints.Add(settings.connectionString);
+            options.Password = settings.password;
 
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
             queryable = redis.GetDatabase();

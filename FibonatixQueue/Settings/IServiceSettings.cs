@@ -11,7 +11,7 @@ namespace FibonatixQueue.Settings
     {
         string connectionString { get; set; }
 
-        string storage { get; set; }
+        string password { get; set; }
     }
 
     public interface ISubServiceSettings : IServiceSettings
@@ -23,21 +23,21 @@ namespace FibonatixQueue.Settings
     {
         public string connectionString { get; set; }
 
-        public string storage { get; set; }
+        public string password { get; set; }
     }
 
     public class AzureDBSettings : IServiceSettings
     {
         public string connectionString { get; set; }
 
-        public string storage { get; set; }
+        public string password { get; set; }
     }
 
     public class MongoDBSettings : ISubServiceSettings
     {
         public string connectionString { get; set; }
 
-        public string storage { get; set; }
+        public string password { get; set; }
 
         public string collection { get; set; }
     }
