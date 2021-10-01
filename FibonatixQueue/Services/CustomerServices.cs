@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Authentication.ExtendedProtection;
 using Azure.Storage;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
@@ -15,6 +17,7 @@ using StackExchange.Redis;
 using StackExchange.Redis.Profiling;
 using StackExchange.Redis.KeyspaceIsolation;
 using FibonatixQueue.Settings;
+using FibonatixQueue.Services;
 
 namespace FibonatixQueue.Services
 {
@@ -24,7 +27,7 @@ namespace FibonatixQueue.Services
     {
         private QueueClient client { get; set; }
 
-        public AzureQueueService(AzureDBSettings settings)
+        public AzureQueueService(CommonDBSettings settings)
         {
             client = new(settings.connectionString, settings.password);
         }
@@ -41,6 +44,20 @@ namespace FibonatixQueue.Services
     {
         public IDatabase queryable { get; set; }
 
+        public string algorithm { get; }
+
+        public RedisQueueService(ISecureServiceSettings settings)
+        {
+            ConfigurationOptions options = new ConfigurationOptions();
+            options.EndPoints.Add(settings.connectionString);
+            options.Password = settings.password;
+
+            IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
+            queryable = redis.GetDatabase();
+
+            algorithm = settings.algorithm;
+        }
+
         public RedisQueueService(IServiceSettings settings)
         {
             ConfigurationOptions options = new ConfigurationOptions();
@@ -49,21 +66,21 @@ namespace FibonatixQueue.Services
 
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
             queryable = redis.GetDatabase();
-            
+
+            algorithm = null;
         }
 
-        public RedisResult PopItem(RedisKey key) { 
+        public RedisValue PopItem(RedisKey key) { 
             try {
-                return RedisResult.Create(queryable.ListRightPop(key));
+                return queryable.ListRightPop(key);
             }
             catch {
-                return RedisResult.Create(new RedisValue());
+                return new RedisValue();
             }
         }
 
         public void PushItem(RedisKey key, RedisValue[] values)
         {
-            // Remove the "Age" field from the json string
             queryable.ListLeftPush(key, values);
         }
     }

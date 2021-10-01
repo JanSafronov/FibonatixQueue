@@ -23,15 +23,27 @@ namespace FibonatixQueue.Controllers
     {
         private readonly RedisQueueService _customerService;
 
+        private readonly SymAlgo _symAlgo;
+
         public CustomerController(RedisQueueService customerService)
         {
             _customerService = customerService;
+
+            if (_customerService.algorithm != null)
+                _symAlgo = new SymAlgo(_customerService.algorithm);
+
         }
 
         [HttpGet(Name = "PopCustomer")]
-        public ActionResult<string[]> Pop(string key)
+        public ActionResult<string> Pop(string key)
         {
-            string[] customerVal = ((string[])_customerService.PopItem(new RedisKey(key)));
+            string customerVal = _customerService.PopItem(new RedisKey(key));
+
+            // Decrypts json string with the algorithm property
+            if (_customerService.algorithm != null)
+            {
+                customerVal = _symAlgo.Decrypt(customerVal);
+            }
 
             if (customerVal == null) 
                 return NotFound();
@@ -39,10 +51,16 @@ namespace FibonatixQueue.Controllers
             return customerVal;
         }
 
-        [HttpPost]
-        public ActionResult<string[]> Post(Customer customer)
+        [HttpPost(Name = "PushCustomer")]
+        public ActionResult<string> Push(Customer customer)
         {
             string json = customer.Jsonify();
+
+            // Encrypts json string with the algorithm property
+            if (_customerService.algorithm != null)
+            {
+                json = _symAlgo.Encrypt(json);
+            }
 
             var redises = new RedisValue[] {
                 new RedisValue(json)
@@ -50,7 +68,7 @@ namespace FibonatixQueue.Controllers
 
             _customerService.PushItem(new RedisKey(customer.Name), redises);
 
-            return (string[])RedisResult.Create(new RedisValue[] { new RedisValue(json) });
+            return (string)RedisResult.Create(new RedisValue[] { new RedisValue(json) });
         }
 
         // PUT api/<CustomerController>/5

@@ -14,18 +14,21 @@ namespace FibonatixQueue.Settings
         string password { get; set; }
     }
 
-    public class RedisDBSettings : IServiceSettings
+    public interface ISecureServiceSettings : IServiceSettings
+    {
+        string algorithm { get; set; }
+    }
+
+    public class CommonDBSettings : IServiceSettings
     {
         public string connectionString { get; set; }
 
         public string password { get; set; }
     }
 
-    public class AzureDBSettings : IServiceSettings
+    public class SecureDBSettings : CommonDBSettings, ISecureServiceSettings
     {
-        public string connectionString { get; set; }
-
-        public string password { get; set; }
+        public string algorithm { get; set; }
     }
 
     public class MongoDBSettings : IServiceSettings

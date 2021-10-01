@@ -6,31 +6,64 @@ using System.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Buffers;
+using System.Buffers.Text;
+using System.Text;
+using System.Text.Encodings;
+using System.IO;
 using Microsoft.AspNetCore.Cryptography;
 
 namespace FibonatixQueue.Services
 {
-    public class SymAlgo<E> where E : SymmetricAlgorithm
+    public class SymAlgo
     {
-        private SymmetricAlgorithm algo = SymmetricAlgorithm.Create(nameof(Aes));
+        private byte[] input { get; set; }
 
-        private string input { get; }
+        private ICryptoTransform encrypt { get; set; }
 
-        private byte[] key { get; }
+        private ICryptoTransform decrypt { get; set; }
 
-        private byte[] iv { get; }
-
-        public SymAlgo(string input, string key, string iv)
+        public SymAlgo(string algName, string key = null, string iv = null)
         {
-            this.input = input;
-            algo.GenerateKey();
-            algo.GenerateIV();
-            this.key = algo.Key;
-            this.iv = algo.IV;
+            SymmetricAlgorithm algorithm = SymmetricAlgorithm.Create(algName);
+            if (key == null)
+                algorithm.GenerateKey();
+            else
+                algorithm.Key = Encoding.UTF8.GetBytes(key);
+            if (iv == null)
+                algorithm.GenerateIV();
+            else
+                algorithm.IV = Encoding.UTF8.GetBytes(iv);
+
+            this.encrypt = algorithm.CreateEncryptor(algorithm.Key, algorithm.IV);
+            this.decrypt = algorithm.CreateDecryptor(algorithm.Key, algorithm.IV);
+
+            this.input = Encoding.UTF8.GetBytes("");
         }
 
-        public void Encrypt()
+        public string Encrypt(string newInput)
         {
+            input = Encoding.UTF8.GetBytes(newInput);
+            //input = encrypt.TransformFinalBlock(input, 0, input.Length);
+            MemoryStream stream = new MemoryStream();
+
+            var cryp = new CryptoStream(stream, encrypt, CryptoStreamMode.Write);
+            cryp.Write(input, 0, input.Length);
+
+            return Encoding.UTF8.GetString(stream.ToArray());
+        }
+
+        public string Decrypt(string newInput)
+        {
+            input = Encoding.UTF8.GetBytes(newInput);
+            //input = decrypt.TransformFinalBlock(input, 0, input.Length);
+
+            MemoryStream stream = new MemoryStream();
+
+            var cryp = new CryptoStream(stream, decrypt, CryptoStreamMode.Write);
+            cryp.Write(input, 0, input.Length);
+
+            return Encoding.UTF8.GetString(stream.ToArray());
         }
     }
 }

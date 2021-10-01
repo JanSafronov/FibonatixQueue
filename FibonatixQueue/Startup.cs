@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -49,9 +50,25 @@ namespace FibonatixQueue
             string connectionString = Console.ReadLine();
             Console.WriteLine("Enter the password for the database:");
             string password = Console.ReadLine();
+            Console.WriteLine("Symmetrically encrypt pushed and decrypt pulled queues value?");
+            bool transform = bool.Parse(Console.ReadLine());
+            if (transform)
+            {
+                Console.WriteLine("What algorithm to use for encryption? Leave empty for AES algorithm by default.");
 
-            services.Configure<RedisDBSettings>(db => { db.connectionString = connectionString; db.password = password; });
-            services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<RedisDBSettings>>().Value);
+                string algorithm = Console.ReadLine();
+
+                if (algorithm == "")
+                    algorithm = "AES";
+
+                services.Configure<SecureDBSettings>(db => { db.connectionString = connectionString; db.password = password; db.algorithm = algorithm; });
+                services.AddSingleton<ISecureServiceSettings>(s => s.GetRequiredService<IOptions<SecureDBSettings>>().Value);
+            }
+            else
+            {
+                services.Configure<CommonDBSettings>(db => { db.connectionString = connectionString; db.password = password; });
+                services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<CommonDBSettings>>().Value);
+            }
 
             services.AddSingleton<RedisQueueService>();
 

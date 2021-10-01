@@ -30,9 +30,8 @@ namespace FibonatixQueue
                     {
                         builder.AddUserSecrets<Program>();
                     }
-                })
-                .Build();
-            host.Run();
+                });
+            host.Build().RunAsync().Wait();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
