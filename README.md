@@ -21,3 +21,8 @@ The project is kept up to date with the latest versioning of the frameworks and 
 I recommend to use httprepl utility for testing and using the api directly in the terminal.
 
 Also the terminal can be used for connection string and password and redirection to Swagger.
+
+## Copyright
+We do not want anyone to see our source code, 
+but if for any reason our code is stolen or otherwise obtained, 
+we want to have a license that does not allow disclosure of any kind.
