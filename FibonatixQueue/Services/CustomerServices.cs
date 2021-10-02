@@ -44,7 +44,7 @@ namespace FibonatixQueue.Services
     {
         public IDatabase queryable { get; set; }
 
-        public string algorithm { get; }
+        private SymAlgo _symAlgo { get; }
 
         public RedisQueueService(ISecureServiceSettings settings)
         {
@@ -55,7 +55,7 @@ namespace FibonatixQueue.Services
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
             queryable = redis.GetDatabase();
 
-            algorithm = settings.algorithm;
+            _symAlgo = new SymAlgo(settings.algorithm);
         }
 
         public RedisQueueService(IServiceSettings settings)
@@ -67,20 +67,28 @@ namespace FibonatixQueue.Services
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
             queryable = redis.GetDatabase();
 
-            algorithm = null;
+            _symAlgo = null;
         }
 
         public RedisValue PopItem(RedisKey key) { 
-            try {
-                return queryable.ListRightPop(key);
+            string value = queryable.ListRightPop(key);
+
+            // Decrypts json string with the algorithm property
+            if (_symAlgo != null)
+            {
+                value = _symAlgo.Decrypt(value);
             }
-            catch {
-                return new RedisValue();
-            }
+
+            return value;
         }
 
         public void PushItem(RedisKey key, RedisValue[] values)
         {
+            // Encrypts json string with the algorithm property
+            if (_symAlgo != null)
+            {
+                values[0] = new RedisValue(Convert.ToBase64String(_symAlgo.Encrypt(values[0])));
+            }
             queryable.ListLeftPush(key, values);
         }
     }

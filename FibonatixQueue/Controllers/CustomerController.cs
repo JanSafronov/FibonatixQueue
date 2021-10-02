@@ -23,15 +23,9 @@ namespace FibonatixQueue.Controllers
     {
         private readonly RedisQueueService _customerService;
 
-        private readonly SymAlgo _symAlgo;
-
         public CustomerController(RedisQueueService customerService)
         {
             _customerService = customerService;
-
-            if (_customerService.algorithm != null)
-                _symAlgo = new SymAlgo(_customerService.algorithm);
-
         }
 
         [HttpGet(Name = "PopCustomer")]
@@ -39,36 +33,22 @@ namespace FibonatixQueue.Controllers
         {
             string customerVal = _customerService.PopItem(new RedisKey(key));
 
-            // Decrypts json string with the algorithm property
-            if (_customerService.algorithm != null)
-            {
-                customerVal = _symAlgo.Decrypt(customerVal);
-            }
-
-            if (customerVal == null) 
+            if (customerVal == null)
                 return NotFound();
 
             return customerVal;
         }
 
         [HttpPost(Name = "PushCustomer")]
-        public ActionResult<string> Push(Customer customer)
+        public IActionResult Push(Customer customer)
         {
             string json = customer.Jsonify();
 
-            // Encrypts json string with the algorithm property
-            if (_customerService.algorithm != null)
-            {
-                json = _symAlgo.Encrypt(json);
-            }
-
-            var redises = new RedisValue[] {
-                new RedisValue(json)
-            };
+            RedisValue[] redises = { new RedisValue(json) };
 
             _customerService.PushItem(new RedisKey(customer.Name), redises);
 
-            return (string)RedisResult.Create(new RedisValue[] { new RedisValue(json) });
+            return Created("redis", new RedisKey(customer.Name).ToString() + " " + redises[0]);
         }
 
         // PUT api/<CustomerController>/5

@@ -70,6 +70,7 @@ namespace FibonatixQueue
                 services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<CommonDBSettings>>().Value);
             }
 
+            // Keeps the service alive and the symmetric algorithm properties
             services.AddSingleton<RedisQueueService>();
 
             services.AddControllers();

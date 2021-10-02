@@ -26,6 +26,8 @@ namespace FibonatixQueue.Services
         public SymAlgo(string algName, string key = null, string iv = null)
         {
             SymmetricAlgorithm algorithm = SymmetricAlgorithm.Create(algName);
+            algorithm.Padding = PaddingMode.Zeros;
+
             if (key == null)
                 algorithm.GenerateKey();
             else
@@ -35,35 +37,24 @@ namespace FibonatixQueue.Services
             else
                 algorithm.IV = Encoding.UTF8.GetBytes(iv);
 
-            this.encrypt = algorithm.CreateEncryptor(algorithm.Key, algorithm.IV);
-            this.decrypt = algorithm.CreateDecryptor(algorithm.Key, algorithm.IV);
-
-            this.input = Encoding.UTF8.GetBytes("");
+            encrypt = algorithm.CreateEncryptor(algorithm.Key, algorithm.IV);
+            decrypt = algorithm.CreateDecryptor(algorithm.Key, algorithm.IV);
         }
 
-        public string Encrypt(string newInput)
+        public byte[] Encrypt(string newInput)
         {
-            input = Encoding.UTF8.GetBytes(newInput);
-            //input = encrypt.TransformFinalBlock(input, 0, input.Length);
-            MemoryStream stream = new MemoryStream();
+            byte[] newBInput = Encoding.UTF8.GetBytes(newInput);
+            input = encrypt.TransformFinalBlock(newBInput, 0, newBInput.Length);
 
-            var cryp = new CryptoStream(stream, encrypt, CryptoStreamMode.Write);
-            cryp.Write(input, 0, input.Length);
-
-            return Encoding.UTF8.GetString(stream.ToArray());
+            return input;
         }
 
         public string Decrypt(string newInput)
         {
-            input = Encoding.UTF8.GetBytes(newInput);
-            //input = decrypt.TransformFinalBlock(input, 0, input.Length);
+            byte[] newBInput = Convert.FromBase64String(newInput);
+            input = decrypt.TransformFinalBlock(newBInput, 0, newBInput.Length);
 
-            MemoryStream stream = new MemoryStream();
-
-            var cryp = new CryptoStream(stream, decrypt, CryptoStreamMode.Write);
-            cryp.Write(input, 0, input.Length);
-
-            return Encoding.UTF8.GetString(stream.ToArray());
+            return Encoding.UTF8.GetString(input);
         }
     }
 }
