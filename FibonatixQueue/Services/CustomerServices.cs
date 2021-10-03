@@ -75,7 +75,7 @@ namespace FibonatixQueue.Services
             string value = Queryable.ListRightPop(key);
 
             // Decrypts json string with the algorithm property
-            if (_symAlgo != null)
+            if (_symAlgo != null && value != null)
             {
                 value = _symAlgo.Decrypt(value);
             }

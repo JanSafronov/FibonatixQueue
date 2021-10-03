@@ -15,11 +15,11 @@ namespace FibonatixQueue
             var host = CreateHostBuilder(args)
                 .ConfigureAppConfiguration((hostContext, builder) =>
                 {
+                    Layout.Main(hostContext.Configuration);
+
                     if (hostContext.HostingEnvironment.IsDevelopment())
                     {
                         builder.AddUserSecrets<Program>();
-
-                        Layout.Main(hostContext.Configuration);
                     }
                 });
             host.Build().RunAsync().Wait();
