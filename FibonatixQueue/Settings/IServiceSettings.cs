@@ -9,36 +9,34 @@ namespace FibonatixQueue.Settings
 {
     public interface IServiceSettings
     {
-        string connectionString { get; set; }
+        string ConnectionString { get; set; }
 
-        string password { get; set; }
+        string Password { get; set; }
     }
 
     public interface ISecureServiceSettings : IServiceSettings
     {
-        string algorithm { get; set; }
+        string Algorithm { get; set; }
     }
 
     public class CommonDBSettings : IServiceSettings
     {
-        public string connectionString { get; set; }
+        public string ConnectionString { get; set; }
 
-        public string password { get; set; }
+        public string Password { get; set; }
     }
 
     public class SecureDBSettings : CommonDBSettings, ISecureServiceSettings
     {
-        public string algorithm { get; set; }
+        public string Algorithm { get; set; }
     }
 
-    public class MongoDBSettings : IServiceSettings
+    public class MongoDBSettings : SecureDBSettings
     {
-        public string connectionString { get; set; }
+        public string Username { get; set; }
 
-        public string password { get; set; }
+        public string Database { get; set; }
 
-        public string database { get; set; }
-
-        public string collection { get; set; }
+        public string Collection { get; set; }
     }
 }

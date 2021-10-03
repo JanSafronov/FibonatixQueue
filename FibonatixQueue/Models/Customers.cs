@@ -44,16 +44,18 @@ namespace FibonatixQueue.Models
 
         [JsonConstructor]
         public Customer(string Name, DateTime Date, int Age, string Profession) :
-        base(Name, Date, Profession) { this.Age = Age; }
-        
+        base(Name, Date, Profession)
+        { this.Age = Age; }
+
         public Customer() :
-        base("string", DateTime.Now, "string") {}
+        base("string", DateTime.Now, "string")
+        { }
 
         public string Jsonify(bool include = false)
         {
-            
+
             string json = JsonConvert.SerializeObject(this);
-            
+
             if (include)
             {
                 var temp = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);

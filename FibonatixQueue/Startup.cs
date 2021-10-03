@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.Encodings;
+using System.IO;
+using System.IO.Compression;
+using System.IO.Pipes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -46,31 +50,18 @@ namespace FibonatixQueue
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            Console.WriteLine("Enter the connection string to the Redis database:");
-            string connectionString = Console.ReadLine();
-            Console.WriteLine("Enter the password for the database:");
-            string password = Console.ReadLine();
-            Console.WriteLine("Symmetrically encrypt pushed and decrypt pulled queues value?");
-            bool transform = bool.Parse(Console.ReadLine());
-            if (transform)
+            if (bool.Parse(Configuration["Transform"]))
             {
-                Console.WriteLine("What algorithm to use for encryption? Leave empty for AES algorithm by default.");
-
-                string algorithm = Console.ReadLine();
-
-                if (algorithm == "")
-                    algorithm = "AES";
-
-                services.Configure<SecureDBSettings>(db => { db.connectionString = connectionString; db.password = password; db.algorithm = algorithm; });
+                services.Configure<SecureDBSettings>(db => { db.ConnectionString = Configuration["ConnectionString"]; db.Password = Configuration["Password"]; db.Algorithm = Configuration["Algorithm"]; });
                 services.AddSingleton<ISecureServiceSettings>(s => s.GetRequiredService<IOptions<SecureDBSettings>>().Value);
             }
             else
             {
-                services.Configure<CommonDBSettings>(db => { db.connectionString = connectionString; db.password = password; });
+                services.Configure<CommonDBSettings>(db => { db.ConnectionString = Configuration["ConnectionString"]; db.Password = Configuration["Password"]; });
                 services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<CommonDBSettings>>().Value);
             }
 
-            // Keeps the service alive and the symmetric algorithm properties
+            // Keeps the service alive and it's symmetric algorithm properties
             services.AddSingleton<RedisQueueService>();
 
             services.AddControllers();
@@ -84,11 +75,6 @@ namespace FibonatixQueue
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "FibonatixQueue", Version = "v1" });
             });
-
-            //var multiplexer = ConnectionMultiplexer.Connect("localhost");
-            //services.AddSingleton<IConnectionMultiplexer>(multiplexer);
-
-            //services.AddControllers().AddNewtonsoftJson(options => options.UseMemberCasing());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -117,6 +103,7 @@ namespace FibonatixQueue
             });
         }
     }
+
     internal static class StartupExtensions
     {
         public static IAzureClientBuilder<BlobServiceClient, BlobClientOptions> AddBlobServiceClient(this AzureClientFactoryBuilder builder, string serviceUriOrConnectionString, bool preferMsi)
@@ -140,6 +127,14 @@ namespace FibonatixQueue
             {
                 return builder.AddQueueServiceClient(serviceUriOrConnectionString);
             }
+        }
+    }
+
+    internal static class StartupInput
+    {
+        public static void AddInputServiceClient(Array strings) // -> BackgroundService
+        {
+
         }
     }
 }

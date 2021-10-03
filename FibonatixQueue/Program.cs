@@ -1,20 +1,9 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.IO;
-using System.IO.Compression;
-using System.IO.Pipelines;
-using System.Text.Json;
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
-using Newtonsoft.Json.Converters;
 
 namespace FibonatixQueue
 {
@@ -29,6 +18,8 @@ namespace FibonatixQueue
                     if (hostContext.HostingEnvironment.IsDevelopment())
                     {
                         builder.AddUserSecrets<Program>();
+
+                        Layout.Main(hostContext.Configuration);
                     }
                 });
             host.Build().RunAsync().Wait();

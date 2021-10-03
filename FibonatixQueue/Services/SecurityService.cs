@@ -17,11 +17,11 @@ namespace FibonatixQueue.Services
 {
     public class SymAlgo
     {
-        private byte[] input { get; set; }
+        private byte[] Input { get; set; }
 
-        private ICryptoTransform encrypt { get; set; }
+        private ICryptoTransform Encryptor { get; set; }
 
-        private ICryptoTransform decrypt { get; set; }
+        private ICryptoTransform Decryptor { get; set; }
 
         public SymAlgo(string algName, string key = null, string iv = null)
         {
@@ -37,24 +37,24 @@ namespace FibonatixQueue.Services
             else
                 algorithm.IV = Encoding.UTF8.GetBytes(iv);
 
-            encrypt = algorithm.CreateEncryptor(algorithm.Key, algorithm.IV);
-            decrypt = algorithm.CreateDecryptor(algorithm.Key, algorithm.IV);
+            Encryptor = algorithm.CreateEncryptor(algorithm.Key, algorithm.IV);
+            Decryptor = algorithm.CreateDecryptor(algorithm.Key, algorithm.IV);
         }
 
         public byte[] Encrypt(string newInput)
         {
             byte[] newBInput = Encoding.UTF8.GetBytes(newInput);
-            input = encrypt.TransformFinalBlock(newBInput, 0, newBInput.Length);
+            Input = Encryptor.TransformFinalBlock(newBInput, 0, newBInput.Length);
 
-            return input;
+            return Input;
         }
 
         public string Decrypt(string newInput)
         {
             byte[] newBInput = Convert.FromBase64String(newInput);
-            input = decrypt.TransformFinalBlock(newBInput, 0, newBInput.Length);
+            Input = Decryptor.TransformFinalBlock(newBInput, 0, newBInput.Length);
 
-            return Encoding.UTF8.GetString(input);
+            return Encoding.UTF8.GetString(Input);
         }
     }
 }

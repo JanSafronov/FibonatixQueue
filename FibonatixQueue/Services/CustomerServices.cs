@@ -25,53 +25,54 @@ namespace FibonatixQueue.Services
 
     public class AzureQueueService
     {
-        private QueueClient client { get; set; }
+        private QueueClient Client { get; set; }
 
         public AzureQueueService(CommonDBSettings settings)
         {
-            client = new(settings.connectionString, settings.password);
+            Client = new(settings.ConnectionString, settings.Password);
         }
 
-        public PeekedMessage PopItem() { return client.PeekMessage().Value; }
+        public PeekedMessage PopItem() { return Client.PeekMessage().Value; }
 
         public void PushItem(string message)
         {
-            client.SendMessage(message);
+            Client.SendMessage(message);
         }
     }
 
     public class RedisQueueService
     {
-        public IDatabase queryable { get; set; }
+        private IDatabase Queryable { get; set; }
 
-        private SymAlgo _symAlgo { get; }
+        private readonly SymAlgo _symAlgo;
 
         public RedisQueueService(ISecureServiceSettings settings)
         {
-            ConfigurationOptions options = new ConfigurationOptions();
-            options.EndPoints.Add(settings.connectionString);
-            options.Password = settings.password;
+            ConfigurationOptions options = new();
+            options.EndPoints.Add(settings.ConnectionString);
+            options.Password = settings.Password;
 
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
-            queryable = redis.GetDatabase();
+            Queryable = redis.GetDatabase();
 
-            _symAlgo = new SymAlgo(settings.algorithm);
+            _symAlgo = new SymAlgo(settings.Algorithm);
         }
 
         public RedisQueueService(IServiceSettings settings)
         {
-            ConfigurationOptions options = new ConfigurationOptions();
-            options.EndPoints.Add(settings.connectionString);
-            options.Password = settings.password;
+            ConfigurationOptions options = new();
+            options.EndPoints.Add(settings.ConnectionString);
+            options.Password = settings.Password;
 
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
-            queryable = redis.GetDatabase();
+            Queryable = redis.GetDatabase();
 
             _symAlgo = null;
         }
 
-        public RedisValue PopItem(RedisKey key) { 
-            string value = queryable.ListRightPop(key);
+        public RedisValue PopItem(RedisKey key)
+        {
+            string value = Queryable.ListRightPop(key);
 
             // Decrypts json string with the algorithm property
             if (_symAlgo != null)
@@ -89,32 +90,35 @@ namespace FibonatixQueue.Services
             {
                 values[0] = new RedisValue(Convert.ToBase64String(_symAlgo.Encrypt(values[0])));
             }
-            queryable.ListLeftPush(key, values);
+            Queryable.ListLeftPush(key, values);
         }
     }
 
     public class MongoQueueService<I> where I : BsonDocument
     {
-        private IMongoCollection<I> queryable { get; set; }
+        private IMongoCollection<I> Queryable { get; set; }
+
+        private readonly SymAlgo _symAlgo;
 
         public MongoQueueService(MongoDBSettings settings)
         {
-            MongoClient client = new(settings.connectionString);
-            IMongoDatabase database = client.GetDatabase(settings.database);
+            MongoClient client = new(settings.ConnectionString);
+            IMongoDatabase database = client.GetDatabase(settings.Database);
 
-            queryable = database.GetCollection<I>(settings.collection);
+            Queryable = database.GetCollection<I>(settings.Collection);
         }
 
-        public BsonDocument PopItem() {
-            FilterDefinitionBuilder<BsonDocument> builder = new FilterDefinitionBuilder<BsonDocument>();
-            BsonObjectId _id = queryable.AsQueryable().FirstOrDefault()[0] as BsonObjectId;
+        public BsonDocument PopItem()
+        {
+            FilterDefinitionBuilder<BsonDocument> builder = new();
+            BsonObjectId _id = Queryable.AsQueryable().FirstOrDefault()[0] as BsonObjectId;
 
-            return queryable.FindOneAndDelete(item => item[0] == _id);
+            return Queryable.FindOneAndDelete(item => item[0] == _id);
         }
 
         public void PushItem(I item)
         {
-            queryable.InsertOne(item);
+            Queryable.InsertOne(item);
         }
     }
 }
