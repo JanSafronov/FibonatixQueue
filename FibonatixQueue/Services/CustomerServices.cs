@@ -28,24 +28,43 @@ namespace FibonatixQueue.Services
 {
     public enum ServiceStructure { Azure, Redis, MongoDB }
 
-    public class AzureQueueService
+    public class QueueService
     {
-        private QueueClient Client { get; set; }
+        //public virtual IDatabase Database { get; set; }
 
-        public AzureQueueService(CommonDBSettings settings)
+        //public readonly SymAlgo _symAlgo;
+
+        public virtual RedisValue PopItem(RedisKey key)
         {
-            Client = new(settings.ConnectionString, settings.Password);
+            return new RedisValue();
         }
 
-        public PeekedMessage PopItem() { return Client.PeekMessage().Value; }
-
-        public void PushItem(string message)
+        public virtual void PushItem(RedisKey key, RedisValue[] values)
         {
-            Client.SendMessage(message);
         }
     }
 
-    public class RedisQueueService
+    public class AzureQueueService
+    {
+        private QueueClient Database { get; set; }
+
+        public AzureQueueService(CommonDBSettings settings)
+        {
+            Database = new(settings.ConnectionString, settings.Password);
+        }
+
+        public RedisValue PopItem(RedisKey key) //{ return Database.PeekMessage().Value; }
+        {
+            return new RedisValue(key);
+        }
+
+        public void PushItem(RedisKey key, RedisValue[] values)
+        {
+            Database.SendMessage(values.ToString());
+        }
+    }
+
+    public class RedisQueueService : QueueService
     {
         private IDatabase Database { get; set; }
 
@@ -75,7 +94,7 @@ namespace FibonatixQueue.Services
             _symAlgo = null;
         }
 
-        public RedisValue PopItem(RedisKey key)
+        public override RedisValue PopItem(RedisKey key)
         {
             string value = Database.ListRightPop(key);
 
@@ -88,7 +107,7 @@ namespace FibonatixQueue.Services
             return value;
         }
 
-        public void PushItem(RedisKey key, RedisValue[] values)
+        public override void PushItem(RedisKey key, RedisValue[] values)
         {
             // Encrypts as json string with the algorithm property
             if (_symAlgo != null)
@@ -97,11 +116,11 @@ namespace FibonatixQueue.Services
         }
     }
 
-    public class MongoQueueService
+    public class MongoQueueService : QueueService
     {
-        private IMongoDatabase Database { get; set; }
+        public IMongoDatabase Database { get; set; }
 
-        private readonly SymAlgo _symAlgo;
+        public readonly SymAlgo _symAlgo;
 
         public MongoQueueService(SecureDBSettings settings)
         {
@@ -111,7 +130,7 @@ namespace FibonatixQueue.Services
             _symAlgo = new SymAlgo(settings.Algorithm);
         }
 
-        public RedisValue PopItem(RedisKey key)
+        public override RedisValue PopItem(RedisKey key)
         {
             string value = Database.GetCollection<BsonDocument>(key).FindOneAndDelete(item => item["id"] == 0).ToJson();
 
@@ -124,7 +143,7 @@ namespace FibonatixQueue.Services
             return value;
         }
 
-        public void PushItem(RedisKey key, RedisValue[] values)
+        public override void PushItem(RedisKey key, RedisValue[] values)
         {
             // Encrypts as json string with the algorithm property
             if (_symAlgo != null)
