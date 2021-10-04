@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
@@ -11,8 +13,11 @@ using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using Azure.Storage.Queues.Specialized;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using MongoDB.Driver.Encryption;
 using MongoDB.Driver.Linq;
+using MongoDB.Libmongocrypt;
 using StackExchange.Redis;
 using StackExchange.Redis.Profiling;
 using StackExchange.Redis.KeyspaceIsolation;
@@ -42,7 +47,7 @@ namespace FibonatixQueue.Services
 
     public class RedisQueueService
     {
-        private IDatabase Queryable { get; set; }
+        private IDatabase Database { get; set; }
 
         private readonly SymAlgo _symAlgo;
 
@@ -53,7 +58,7 @@ namespace FibonatixQueue.Services
             options.Password = settings.Password;
 
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
-            Queryable = redis.GetDatabase();
+            Database = redis.GetDatabase();
 
             _symAlgo = new SymAlgo(settings.Algorithm);
         }
@@ -65,16 +70,16 @@ namespace FibonatixQueue.Services
             options.Password = settings.Password;
 
             IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(options);
-            Queryable = redis.GetDatabase();
+            Database = redis.GetDatabase();
 
             _symAlgo = null;
         }
 
         public RedisValue PopItem(RedisKey key)
         {
-            string value = Queryable.ListRightPop(key);
+            string value = Database.ListRightPop(key);
 
-            // Decrypts json string with the algorithm property
+            // Decrypts as json string with the algorithm property
             if (_symAlgo != null && value != null)
             {
                 value = _symAlgo.Decrypt(value);
@@ -85,40 +90,51 @@ namespace FibonatixQueue.Services
 
         public void PushItem(RedisKey key, RedisValue[] values)
         {
-            // Encrypts json string with the algorithm property
+            // Encrypts as json string with the algorithm property
             if (_symAlgo != null)
-            {
                 values[0] = new RedisValue(Convert.ToBase64String(_symAlgo.Encrypt(values[0])));
-            }
-            Queryable.ListLeftPush(key, values);
+            Database.ListLeftPush(key, values);
         }
     }
 
-    public class MongoQueueService<I> where I : BsonDocument
+    public class MongoQueueService
     {
-        private IMongoCollection<I> Queryable { get; set; }
+        private IMongoDatabase Database { get; set; }
 
         private readonly SymAlgo _symAlgo;
 
-        public MongoQueueService(MongoDBSettings settings)
+        public MongoQueueService(SecureDBSettings settings)
         {
             MongoClient client = new(settings.ConnectionString);
-            IMongoDatabase database = client.GetDatabase(settings.Database);
+            Database = client.GetDatabase(settings.ConnectionString[(settings.ConnectionString.LastIndexOf("/") + 1)..]);
 
-            Queryable = database.GetCollection<I>(settings.Collection);
+            _symAlgo = new SymAlgo(settings.Algorithm);
         }
 
-        public BsonDocument PopItem()
+        public RedisValue PopItem(RedisKey key)
         {
-            FilterDefinitionBuilder<BsonDocument> builder = new();
-            BsonObjectId _id = Queryable.AsQueryable().FirstOrDefault()[0] as BsonObjectId;
+            string value = Database.GetCollection<BsonDocument>(key).FindOneAndDelete(item => item["id"] == 0).ToJson();
 
-            return Queryable.FindOneAndDelete(item => item[0] == _id);
+            // Decrypts as json string with the algorithm property
+            if (_symAlgo != null && value != null)
+            {
+                value = _symAlgo.Decrypt(value);
+            }
+
+            return value;
         }
 
-        public void PushItem(I item)
+        public void PushItem(RedisKey key, RedisValue[] values)
         {
-            Queryable.InsertOne(item);
+            // Encrypts as json string with the algorithm property
+            if (_symAlgo != null)
+                values[0] = new RedisValue(Convert.ToBase64String(_symAlgo.Encrypt(values[0])));
+
+            IMongoCollection<BsonDocument> collection = Database.GetCollection<BsonDocument>(key.ToString());
+
+            long length = collection.CountDocuments(doc => true);
+
+            collection.InsertOne(new BsonDocument("id", new BsonInt64(length)).Add("value", values[0].ToString()));
         }
     }
 }

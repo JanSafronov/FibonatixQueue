@@ -19,7 +19,7 @@ namespace FibonatixQueue
 
         public Task Invoke(HttpContext httpContext)
         {
-
+            httpContext.Response.Redirect("https://localhost:5001/swagger");
             return _next(httpContext);
         }
     }
