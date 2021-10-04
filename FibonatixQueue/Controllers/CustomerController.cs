@@ -21,9 +21,9 @@ namespace FibonatixQueue.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        private readonly RedisQueueService _customerService;
+        private readonly MongoQueueService _customerService;
 
-        public CustomerController(RedisQueueService customerService)
+        public CustomerController(MongoQueueService customerService)
         {
             _customerService = customerService;
         }
@@ -40,27 +40,15 @@ namespace FibonatixQueue.Controllers
         }
 
         [HttpPost(Name = "PushCustomer")]
-        public IActionResult Push(Customer customer)
+        public IActionResult Push(string key, Customer customer)
         {
             string json = customer.Jsonify();
 
             RedisValue[] redises = { new RedisValue(json) };
 
-            _customerService.PushItem(new RedisKey(customer.Name), redises);
+            _customerService.PushItem(new RedisKey(key), redises);
 
-            return Created("redis", new RedisKey(customer.Name).ToString() + " " + redises[0]);
+            return Created("redis", new RedisKey(key).ToString() + " " + redises[0]);
         }
-
-        // PUT api/<CustomerController>/5
-        /*[HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<CustomerController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }*/
     }
 }

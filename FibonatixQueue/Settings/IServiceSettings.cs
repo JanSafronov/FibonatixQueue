@@ -30,13 +30,4 @@ namespace FibonatixQueue.Settings
     {
         public string Algorithm { get; set; }
     }
-
-    public class MongoDBSettings : SecureDBSettings
-    {
-        public string Username { get; set; }
-
-        public string Database { get; set; }
-
-        public string Collection { get; set; }
-    }
 }

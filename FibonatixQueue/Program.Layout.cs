@@ -39,37 +39,38 @@ namespace FibonatixQueue
 
             while(true)
             {
-                input = Console.ReadLine();
+                input = Task.Run(() => Console.ReadLine()).Result;
                 if (input == "list")
                     Array.ForEach<string>(_services, s => Console.Write(s + "; "));
-                Console.WriteLine();
-
-                if (_services.Contains(input))
+                if (_services.Contains(input)) {
+                    configuration["Service"] = input;
                     break;
+                }
+                else
+                    Console.WriteLine("\nPlease enter the NoSQL service to use, enter 'list' to view the available services.");
+
             }
 
             Console.WriteLine("Enter the connection string to the {0} database:", input);
-            input = Console.ReadLine();
+            input = Task.Run(() => Console.ReadLine()).Result;
 
             configuration["ConnectionString"] = input;
 
             Console.WriteLine("Enter the password for the database:");
-            input = Console.ReadLine();
+            input = Task.Run(() => Console.ReadLine()).Result;
 
             configuration["Password"] = input;
 
             Console.WriteLine("Symmetrically encrypt pushed and decrypt pulled queues value?");
-            input = Console.ReadLine();
+            input = Task.Run(() => Console.ReadLine()).Result;
 
             configuration["Transform"] = input;
 
-            if (bool.Parse(configuration["Transform"]))
-            {
+            if (bool.Parse(configuration["Transform"])) {
                 Console.WriteLine("What algorithm to use for the cipher? Leave empty for AES algorithm by default or enter 'list' to view some available algorithms.");
 
-                while (true)
-                {
-                    input = Console.ReadLine();
+                while (true) {
+                    input = Task.Run(() => Console.ReadLine()).Result;
                     if (input == "list")
                         Array.ForEach<string>(_ciphers, s => Console.Write(s + "; "));
                     Console.WriteLine();

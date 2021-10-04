@@ -1,13 +1,4 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Encodings;
-using System.IO;
-using System.IO.Compression;
-using System.IO.Pipes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -30,15 +21,20 @@ using Azure.Core.Extensions;
 using StackExchange.Redis;
 using FibonatixQueue.Services;
 using FibonatixQueue.Settings;
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
-using Newtonsoft.Json.Converters;
 [assembly: FunctionsStartup(typeof(FibonatixQueue.Startup))]
 
 namespace FibonatixQueue
 {
-    public class Startup
+    public interface IStartup
+    {
+        IConfiguration Configuration { get; }
+
+        void ConfigureServices(IServiceCollection services);
+
+        void Configure(IApplicationBuilder app, IWebHostEnvironment env);
+    }
+
+    public class Startup : IStartup
     {
         public Startup(IConfiguration configuration)
         {
@@ -62,7 +58,10 @@ namespace FibonatixQueue
             }
 
             // Keeps the service alive and it's symmetric algorithm properties
-            services.AddSingleton<RedisQueueService>();
+            if (Configuration["Service"] == "Redis")
+                services.AddSingleton<RedisQueueService>();
+            if (Configuration["Service"] == "MongoDB")
+                services.AddSingleton<MongoQueueService>();
 
             services.AddControllers();
             services.AddAzureClients(builder =>
@@ -97,12 +96,53 @@ namespace FibonatixQueue
             app.UseAuthentication();
             app.UseAuthorization();
 
+            //MiddlewareExtensions.UseMiddleware(app);
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+
+            /*app.Run(async context =>
+            {
+                await context.Response.StartAsync();
+                context.Response.Redirect("https://localhost:5001/swagger");
+            });*/
         }
     }
+
+    /*public class ServiceStartup : IStartup
+    {
+        public ServiceStartup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            if (bool.Parse(Configuration["Transform"]))
+            {
+                services.Configure<SecureDBSettings>(db => { db.ConnectionString = Configuration["ConnectionString"]; db.Password = Configuration["Password"]; db.Algorithm = Configuration["Algorithm"]; });
+                services.AddSingleton<ISecureServiceSettings>(s => s.GetRequiredService<IOptions<SecureDBSettings>>().Value);
+            }
+            else
+            {
+                services.Configure<CommonDBSettings>(db => { db.ConnectionString = Configuration["ConnectionString"]; db.Password = Configuration["Password"]; });
+                services.AddSingleton<IServiceSettings>(s => s.GetRequiredService<IOptions<CommonDBSettings>>().Value);
+            }
+
+            // Keeps the service alive and it's symmetric algorithm properties
+            services.AddSingleton<RedisQueueService>();
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+        }
+    }*/
 
     internal static class StartupExtensions
     {
@@ -130,11 +170,11 @@ namespace FibonatixQueue
         }
     }
 
-    internal static class StartupInput
+    /*internal static class StartupInput
     {
         public static void AddInputServiceClient(Array strings) // -> BackgroundService
         {
 
         }
-    }
+    }*/
 }
