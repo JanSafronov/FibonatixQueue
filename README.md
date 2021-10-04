@@ -3,7 +3,7 @@ Entrence microservice project based on Redis queue management and additional NoS
 
 ## Services & Frameworks
 Redis StackExchange library is used together with .NET Core,
-Additionally, the API supports Azure queue storage and MongoDB NoSQL services.
+Additionally, the API supports Azure queue storage and MongoDB NoSQL services but interprets them with appropriate Redis terms.
 The application automatically redirects you to swagger url (you can change settings directly, read more: https://swagger.io/)
 
 The API uses external libraries and environments such as:
