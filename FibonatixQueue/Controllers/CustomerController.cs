@@ -8,6 +8,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using Microsoft.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Internal;
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
 using StackExchange.Redis.KeyspaceIsolation;
@@ -17,18 +21,16 @@ using FibonatixQueue.Services;
 
 namespace FibonatixQueue.Controllers
 {
-    [Route("api/[controller]", Name = "Customer")]
-    [ApiController]
-    public class CustomerController : ControllerBase
+    public abstract class CustomerControllerBase : ControllerBase
     {
-        private readonly MongoQueueService _customerService;
+        private readonly QueueService _customerService;
 
-        public CustomerController(MongoQueueService customerService)
+        public CustomerControllerBase(QueueService customerService)
         {
             _customerService = customerService;
         }
 
-        [HttpGet(Name = "PopCustomer")]
+        [HttpGet]
         public ActionResult<string> Pop(string key)
         {
             string customerVal = _customerService.PopItem(new RedisKey(key));
@@ -39,7 +41,7 @@ namespace FibonatixQueue.Controllers
             return customerVal;
         }
 
-        [HttpPost(Name = "PushCustomer")]
+        [HttpPost]
         public IActionResult Push(string key, Customer customer)
         {
             string json = customer.Jsonify();
@@ -50,5 +52,22 @@ namespace FibonatixQueue.Controllers
 
             return Created("redis", new RedisKey(key).ToString() + " " + redises[0]);
         }
+    }
+
+    [Route("api/redis/[controller]")]
+    [ApiController]
+    public class RedisCustomerController : CustomerControllerBase
+    {
+        public RedisCustomerController(RedisQueueService customerService) :
+        base(customerService) { }
+    }
+
+    [Route("api/mongodb/[controller]")]
+    [ApiController]
+    public class MongoCustomerController : CustomerControllerBase
+    {
+        public MongoCustomerController(MongoQueueService customerService) :
+        base(customerService) { }
+
     }
 }

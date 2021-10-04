@@ -20,6 +20,7 @@ using Azure.Storage.Blobs;
 using Azure.Core.Extensions;
 using StackExchange.Redis;
 using FibonatixQueue.Services;
+using FibonatixQueue.Controllers;
 using FibonatixQueue.Settings;
 [assembly: FunctionsStartup(typeof(FibonatixQueue.Startup))]
 
@@ -59,7 +60,9 @@ namespace FibonatixQueue
 
             // Keeps the service alive and it's symmetric algorithm properties
             if (Configuration["Service"] == "Redis")
+            {
                 services.AddSingleton<RedisQueueService>();
+            }
             if (Configuration["Service"] == "MongoDB")
                 services.AddSingleton<MongoQueueService>();
 
@@ -95,8 +98,6 @@ namespace FibonatixQueue
 
             app.UseAuthentication();
             app.UseAuthorization();
-
-            //MiddlewareExtensions.UseMiddleware(app);
 
             app.UseEndpoints(endpoints =>
             {
