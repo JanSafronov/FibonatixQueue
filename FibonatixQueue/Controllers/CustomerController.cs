@@ -54,7 +54,7 @@ namespace FibonatixQueue.Controllers
         }
     }
 
-    [Route("api/redis/[controller]")]
+    [Route("api/customer/[controller]", Name = "redis")]
     [ApiController]
     public class RedisCustomerController : CustomerControllerBase
     {
@@ -62,7 +62,7 @@ namespace FibonatixQueue.Controllers
         base(customerService) { }
     }
 
-    [Route("api/mongodb/[controller]")]
+    [Route("api/customer/[controller]", Name = "mongodb")]
     [ApiController]
     public class MongoCustomerController : CustomerControllerBase
     {
