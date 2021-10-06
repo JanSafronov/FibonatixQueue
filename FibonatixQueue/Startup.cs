@@ -67,6 +67,7 @@ namespace FibonatixQueue
                 services.AddSingleton<MongoQueueService>();
 
             services.AddControllers();
+            services.AddCustomHealthCheck(Configuration);
             services.AddAzureClients(builder =>
             {
                 builder.AddBlobServiceClient(Configuration["ConnectionStrings:LocalDBTesting:blob"], preferMsi: true);
