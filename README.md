@@ -1,5 +1,5 @@
 # FibonatixQueue
-Entrence microservice project based on Redis queue management and additional NoSQL services.
+Microservice project based on Redis queue management and additional NoSQL services.
 
 ## Services & Frameworks
 Redis StackExchange library is used together with .NET Core,
